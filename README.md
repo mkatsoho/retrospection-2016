@@ -2,6 +2,8 @@
 
 A retrospection of technical failures expericeced in 2016
 
+----
+
 ## many engineers or several engineers （是一帮人一块开发，还是几个人开发）
 
 2016中经历了一个feature，需要众多开发人员参与，协同开发，数据流从component 1 to component N，非常之长，不复杂的feature，经历了整整一周的开发时间，终于搞定。感叹。。。
@@ -16,6 +18,8 @@ A retrospection of technical failures expericeced in 2016
 
 简而言之，相信”代码改变世界“的话，就选择”several engineers“吧。如果相信”奋斗才能成功“，”many engineers“也许是好选择中的一个。
 
+----
+
 ## 不同的APK中使用公共的SDK模块，真的好难
 
 最近看到有好多的APK，都在使用一个内部自定义的SDK模块。现象就是：“五花八门”。
@@ -27,6 +31,8 @@ UI和使用行为的不一致，这是合理的。那这个问题怎么解？！
 不同人有不同的想法。私以为，“SDK规范”的实现，可以和UI解耦，用非可视化的model来实现所有的下行和上行数据流（下发和上报）。当然在给2个UI的参考实现。不同的APK fork UI的实现，把各种自己期望的UI事件和model的行为链接在一起。这样既保证了“SDK规范”的一致性，又保证了“APK的UI特色”。值得考量。
 
 当然，在说一下困难。其实困难不是技术，是人。不同部门见的独立，互相的敬仰或不敬仰，任务别人挫或自己强。。。当自己搞不定的时候，显然原因是有更优先的工作，人员不够，需求不应该。。。最终还是人的“问题”。
+
+----
 
 ## 说说后台服务的QPS （每秒可以处理的请求数）
 
@@ -41,6 +47,8 @@ UI和使用行为的不一致，这是合理的。那这个问题怎么解？！
 技术上选择了同步IO，用多进程来解决并发的问题。10 QPS每进程 * 32 进程 = 320 QPS 处理能力也就这样喽。异步IO会增加代码的复杂度吗？这个不好回答。c++，python，java，nodejs都不一样。或许每个语言都有成本不高的异步IO方案，即，学习成本不高，架构不复杂，代码也不很复杂，debug也容易的方案。我相信它们都有。
 
 人的事情永远比技术的复杂度大，此处省略500字。
+
+----
 
 ## 写测试代码太耗时间
 
@@ -57,7 +65,7 @@ UI和使用行为的不一致，这是合理的。那这个问题怎么解？！
 
 把上面都考虑了，你会发现测试就是一个顺理成章的事。例如，5行搞定：
 
-···Javascript
+```
   # Exmaple: load a new conf to server, wait it restart, and ensure the new conf works
   startTimestamp = Time.now()
   assert url(/loadNewConf).sendRequest() == 200                 # load new conf
@@ -67,4 +75,4 @@ UI和使用行为的不一致，这是合理的。那这个问题怎么解？！
   assert url('/isRunningAfterLoad').sendRequest().body().status == 'running'        # running!
   assert url('/getConf').sendRequest().body().conf = 'new'      # new conf has been effective
   assert Time.now() - startTimestamp < 500ms                    # should be less than 0.5 sec
-···
+```
