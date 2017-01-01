@@ -2,7 +2,7 @@
 
 A retrospection of technical failures expericeced in 2016
 
-## many engineers or several engineers
+## many engineers or several engineers （是一帮人一块开发，还是几个人开发）
 
 2016中经历了一个feature，需要众多开发人员参与，协同开发，数据流从component 1 to component N，非常之长，不复杂的feature，经历了整整一周的开发时间，终于搞定。感叹。。。
 
@@ -34,10 +34,37 @@ UI和使用行为的不一致，这是合理的。那这个问题怎么解？！
 
 答：不确定。不知道cpu型号。不知道服务是不是cpu密集型的。不知道服务是不是io密集型的。不知道io对应的后端资源的latency。不知道请求的协议。不知道请求的payload大小。。。
 
-如果，服务既不是CPU密集型的，也不是IO密集型的，可是这样一台应该CPU还不差的服务器的QPS不到600？甚至不到300？你还是会觉得不可思议吧？8086的处理速度？不，应该是一个是个i5笔记本的
-如果，服务既不是CPU密集型的，也不是IO密集型的，可是这样一台应该CPU还不差的服务器的QPS不到600？甚至不到300？你还是会觉得不可思议吧？8086的处理速度？不，应该是个高配i5笔记本的
-如果，服务既不是CPU密集型的，也不是IO密集型的，可是这样一台应该CPU还不差的服务器的QPS不到600？甚至不到300？你还是会觉得不可思议吧？8086的处理速度？不，应该是个是个的i5笔记本的
-如果，服务既不是CPU密集型的，也不是IO密集型的，可是这样一台应该CPU还不差的服务器的QPS不到600？甚至不到300？你还是会觉得不可思议吧？8086的处理速度？不，应该是个是个笔记本的处理
-如果，服务既不是CPU密集型的，也不是IO密集型的，可是这样一台应该CPU还不差的服务器的QPS不到600？甚至不到300？你还是会觉得不可思议吧？8086的处理速度？不，应该是个是个i5笔记本的
-如果，服务既不是CPU密集型的，也不是IO密集型的，可是这样一台应该CPU还不差的服务器的QPS不到600？甚至不到300？你还是会觉得不可思议吧？8086的处理速度？不，应该是个是个i5笔记本的速度
-如果，服务既不是CPU密集型的，也不是IO密集型的，可是这样一台应该CPU还不差的服务器的QPS不到600？甚至不到300？你还是会觉得不可思议吧？8086的处理速度？不，应该是个是个i5笔记本的。
+如果，服务既不是CPU密集型的，也不是IO密集型的，这样一台应该CPU还不差的服务器的QPS还不到600？甚至不到300？不可思议吧？8086的处理速度？不，应该是个i5笔记本的速度。
+
+原因在哪呢？技术和人，不外乎这两件事。
+
+技术上选择了同步IO，用多进程来解决并发的问题。10 QPS每进程 * 32 进程 = 320 QPS 处理能力也就这样喽。异步IO会增加代码的复杂度吗？这个不好回答。c++，python，java，nodejs都不一样。或许每个语言都有成本不高的异步IO方案，即，学习成本不高，架构不复杂，代码也不很复杂，debug也容易的方案。我相信它们都有。
+
+人的事情永远比技术的复杂度大，此处省略500字。
+
+## 写测试代码太耗时间
+
+每每听到有人说“写测试代码太耗时间”，“太赶，没时间”。曾经认为最正确的回应是”有足够的测试代码才能敏捷开发“。现在已经不在这么想了（老了）。
+
+还是只谈技术，不谈”政治“（技术）。
+
+技术上讲，“测试代码太复杂”核心的原因是：设计架构和API的时候，仅仅想着功能，就没有想怎么测试。更直白的讲，设计能力不够。写功能的时候，要考虑好写个事儿呢！例如：
+
+- 并发性能。怎么知道服务端的QPS呢？设计的时候已经考虑了怎么测试性能了。否者，out了
+- 响应时间。有的API不会有很大的访问压力，比如说服务端ready这样的API，需要很快的响应时间。只考虑功能，对响应时间不感冒，就完成了那点功能，就有点low了。
+- security。不要到处留下password／token的脚印，不要，千万不要。需要保存话，也是一个不可逆的数值。
+- 其它，没记错的应该一共有7个
+
+把上面都考虑了，你会发现测试就是一个顺理成章的事。例如，5行搞定：
+
+···Javascript
+  # Exmaple: load a new conf to server, wait it restart, and ensure the new conf works
+  startTimestamp = Time.now()
+  assert url(/loadNewConf).sendRequest() == 200                 # load new conf
+  setTimer(timeout=10s, interval=10ms, funciton(){
+      break if url('/isRunningAfterLoad').sendRequest().body().status == 'running'  # wait until running
+  )
+  assert url('/isRunningAfterLoad').sendRequest().body().status == 'running'        # running!
+  assert url('/getConf').sendRequest().body().conf = 'new'      # new conf has been effective
+  assert Time.now() - startTimestamp < 500ms                    # should be less than 0.5 sec
+···
