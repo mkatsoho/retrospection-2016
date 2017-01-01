@@ -2,6 +2,8 @@
 
 A retrospection of technical failures expericeced in 2016 (2016年技术回顾）
 
+Written by Michael Chen， 1/1/2016
+
 ----
 
 ## many engineers or several engineers （是一帮人一块开发，还是几个人开发）
