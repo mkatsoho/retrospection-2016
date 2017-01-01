@@ -1,6 +1,6 @@
 # Retrospection-2016
 
-A retrospection of technical failures expericeced in 2016
+A retrospection of technical failures expericeced in 2016 (2016年技术回顾）
 
 ----
 
